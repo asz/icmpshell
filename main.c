@@ -1,13 +1,24 @@
 #include <linux/module.h>
+#include <linux/ip.h>
 #include <linux/icmp.h>
 #include <linux/netfilter_ipv4.h>
 
 static struct nf_hook_ops nfho;
 static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
+  struct iphdr *iph;
   struct icmphdr *icmph;
 
+  iph = ip_hdr(skb);
   icmph = icmp_hdr(skb);
+
+  if (iph->protocol != IPPROTO_ICMP) {
+    return NF_ACCEPT;
+  }
+  if (icmph->type != ICMP_ECHO) {
+    return NF_ACCEPT;
+  }
+
   printk(KERN_DEBUG
          "icmpshell: type=%d; code=%d\n",
          icmph->type,
