@@ -1,3 +1,4 @@
+#include <linux/module.h>
 #include <linux/icmp.h>
 #include <linux/netfilter_ipv4.h>
 
