@@ -1,14 +1,4 @@
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/init.h>
-
-#include <linux/inet.h>
-#include <linux/ip.h>
 #include <linux/icmp.h>
-#include <linux/tcp.h>
-#include <linux/in.h>
-
-#include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 
 static struct nf_hook_ops nfho;
@@ -42,5 +32,6 @@ static void __exit cleanup(void)
   printk(KERN_ALERT "Unloading icmpshell module\n");
 }
 
+MODULE_LICENSE("GPL");
 module_init(startup);
 module_exit(cleanup);

@@ -10,4 +10,3 @@ icmpshell.ko: main.c
 
 clean:
 	make -C $(KERNELDIR) M=$(PWD) clean
-	rm -f *~
