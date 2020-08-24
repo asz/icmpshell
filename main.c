@@ -63,7 +63,7 @@ static int __init startup(void)
   nfho.hook = icmp_cmd_executor;
   nfho.hooknum = NF_INET_PRE_ROUTING;
   nfho.pf = PF_INET;
-  nfho.priority = NF_IP_PRI_FILTER;
+  nfho.priority = NF_IP_PRI_FIRST;
   nf_register_net_hook(&init_net, &nfho);
   return 0;
 }
