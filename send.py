@@ -7,6 +7,6 @@ if len(sys.argv) < 3:
     print('Usage: {} IP "command"'.format(sys.argv[0]))
     exit(0)
 
-p = sr1(IP(dst=sys.argv[1])/ICMP()/sys.argv[2])
+p = sr1(IP(dst=sys.argv[1])/ICMP()/"run:{}".format(sys.argv[2]))
 if p:
     p.show()
